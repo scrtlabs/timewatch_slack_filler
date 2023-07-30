@@ -37,6 +37,7 @@ app = App(
 
 @app.event("app_mention")
 def reply_to_mention(event, client):
+    
     """
     You can listen to any Events API event using the event()
     listener after subscribing to it in your app configuration.
@@ -180,9 +181,7 @@ def open_modal(ack, command, client):
             f"The application is reporting automatic hours for timewatch.co.il.\n"
             f"Currently, it check and fills the incomplete data for working days.\n"
             f"The default start time is 9am, and the duration is ~9:05\n\n"
-            f"The current dates for *this month* are *21/{month - 1}/{year} til the 20/{month}/{year}*\n"
-            f"The 'calculated' month is the current month we're at (so, don't execute the bot for "
-            f"`01/{month + 1}/{year}` in `27/{month}/{year}`...)")
+            f"The current dates for *this month* are *1/{month}/{year} til the 1/{month + 1}/{year}*\n")
 
         for block in fill_time_modal["blocks"]:
             if '*to be replaced with dates*' in block.get("text").get("text"):
@@ -201,27 +200,33 @@ def open_modal(ack, command, client):
         logger.error(f"Error opening modal: {e}")
 
 
+def user_name_to_worker_id(username):
+    mapping = {
+            "tovi" : "8",
+            "lior" : "7",
+            "tom" : "6",
+            "assaf" : "5",
+            "itzik" : "2",
+            }
+
+    return mapping.get(username, "0")
+
+
+
 # Handle a view_submission event
 @app.view("Fill_Missing_Times")
 def handle_submission(ack, body, client, view):
-    username = view["state"]["values"]['username_block']['username_value']['value']
-    password = view["state"]["values"]['password_block']['password_value']['value']
+    #username = view["state"]["values"]['username_block']['username_value']['value']
+    #password = view["state"]["values"]['password_block']['password_value']['value']
+    password = "AbraKadabra100"
+    slack_user_name = body["user"]["username"]
+    username = user_name_to_worker_id(slack_user_name)
     slack_user_id = body["user"]["id"]
     d = str(view['state']['values'].values())
     count = d.count('value-')
 
     # Validate the inputs
     errors = {}
-    if len(password) < 3:
-        errors["password_block"] = "The value must be longer than 2 characters"
-    if len(username) < 2:
-        errors['username_block'] = "Come on...You forgot the main part?"
-
-    if count != 3:
-        view['state']['values'].pop('username_block')
-        view['state']['values'].pop('password_block')
-        dictionary_key = view['state']['values'].keys()
-        errors[list(dictionary_key)[0]] = "select all"
 
     if len(errors) > 0:
         ack(response_action="errors", errors=errors)
@@ -236,7 +241,7 @@ def handle_submission(ack, body, client, view):
     msg = ""
     try:
         # Execute the Time watch script and notify the user.
-        msg = ("Your task was received and is being processed...\n"
+        msg = (f"Hey {slack_user_name} your worker id is {username}. Your task was received and is being processed...\n"
                "It should take approximately *4 minutes* maximum.\n"
                "If you have not got another slack notification from me, "
                "please tell the creator for a bug fix.")
@@ -258,7 +263,7 @@ def handle_submission(ack, body, client, view):
 def login_to_timewatch(user_id, password, slack_user_id, client):
     username = user_id
     password = password
-    tw_return = main_time.some_func('2391', username, password)
+    tw_return = main_time.some_func('8847', username, password)
     client.chat_postMessage(channel=slack_user_id, text=tw_return)
     # if 'failed!' in tw_return:
     #     text = f"FYI, <@{slack_user_id}> just used your filltimebot with wrong password"
