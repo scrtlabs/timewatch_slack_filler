@@ -202,6 +202,8 @@ def open_modal(ack, command, client):
 
 def user_name_to_worker_id(username):
     mapping = {
+            "shahar" : "13",
+            "eshel" : "12",
             "tovi" : "8",
             "lior" : "7",
             "tom" : "6",
